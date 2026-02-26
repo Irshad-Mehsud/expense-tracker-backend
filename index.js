@@ -49,8 +49,16 @@ app.get("/", (req, res) => {
 });
 
 // IMPORTANT CHANGE FOR VERCEL
-// Export a named `handler` function which wraps your serverless(app) call
-export const handler = serverless(app); // Changed from `export default` to `export const handler`
+
+// ✅ Local server (only runs locally, not on Vercel)
+if (process.env.NODE_ENV !== "production") {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`🚀 Server is running on port ${PORT}`);
+  });
+}
+// ✅ Export for Vercel serverless function
+export default serverless(app);
 
 // ✅ Local server (only runs locally, not on Vercel)
 if (process.env.NODE_ENV !== "production") {
