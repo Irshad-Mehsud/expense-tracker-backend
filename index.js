@@ -12,8 +12,9 @@ const app = express();
 app.use(express.json());
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://expense-tracker-frontend-jade-alpha.vercel.app/"], // Add your production frontend URL here
+    origin: true, // Allow all origins (for development; adjust for production)
     credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
