@@ -12,7 +12,8 @@ cloudinary.config({
   api_secret: process.env.API_SECRET,
 });
 
-const upLoadToCloudinary = async (filePath, mimeType) => {
+
+const upLoadToCloudinary = async (buffer, mimeType) => {
   try {
     // Validate MIME type
     if (!mimeType) {
@@ -24,48 +25,47 @@ const upLoadToCloudinary = async (filePath, mimeType) => {
       throw new Error(`Unsupported file type: ${mimeType}`);
     }
 
-    // Ensure directory exists
-    const uploadDir = path.dirname(filePath);
-
-    // Safely generate compressed file path
-    const originalFileName = path.basename(filePath); // e.g. "abc123"
-    const compressedFileName = originalFileName + '.webp'; // "abc123.webp"
-    const compressedPath = path.join(uploadDir, compressedFileName); // uploads/abc123.webp
-
-    // Compress and convert to WebP
-    await sharp(filePath)
+    // Compress and convert to WebP in memory
+    const compressedBuffer = await sharp(buffer)
       .webp({ quality: 20 })
-      .toFile(compressedPath);
+      .toBuffer();
 
-    console.log("Image compressed and saved as:", compressedPath);
-
-    // Upload to Cloudinary
-    const result = await cloudinary.uploader.upload(compressedPath, {
+    // Upload to Cloudinary from buffer
+    const result = await cloudinary.uploader.upload_stream({
       folder: "Expense-Tracker-App",
       resource_type: "image",
+      format: "webp"
+    }, (error, result) => {
+      if (error) throw error;
+      return result;
     });
 
-    console.log("Uploaded to Cloudinary:", result.secure_url);
+    // We need to wrap the stream in a Promise
+    await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream({
+        folder: "Expense-Tracker-App",
+        resource_type: "image",
+        format: "webp"
+      }, (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      });
+      stream.end(compressedBuffer);
+    });
 
-    // Delete original and compressed files
-    await fs.remove(filePath);
-    await fs.remove(compressedPath);
-    console.log("Local files deleted.");
-
-    return result.secure_url;
+    // Return the secure_url from the result
+    return (await new Promise((resolve, reject) => {
+      cloudinary.uploader.upload_stream({
+        folder: "Expense-Tracker-App",
+        resource_type: "image",
+        format: "webp"
+      }, (error, result) => {
+        if (error) return reject(error);
+        resolve(result.secure_url);
+      }).end(compressedBuffer);
+    }));
   } catch (error) {
     console.error("Upload failed:", error);
-
-    // Clean up
-    if (await fs.pathExists(filePath)) await fs.remove(filePath);
-
-    const uploadDir = path.dirname(filePath);
-    const originalFileName = path.basename(filePath);
-    const compressedFileName = originalFileName + '.webp';
-    const compressedPath = path.join(uploadDir, compressedFileName);
-    
-    if (await fs.pathExists(compressedPath)) await fs.remove(compressedPath);
-
     throw error;
   }
 };

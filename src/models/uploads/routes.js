@@ -3,9 +3,8 @@ import multer from "multer";
 import uploadController from "./controllers/upload.js";
 
 const router = Router();
-// Multer configuration
-const upload = multer({ dest: "src/modules/uploads/files/" }); 
-// Destination folder for uploaded files
+// Multer memory storage for Vercel compatibility
+const upload = multer({ storage: multer.memoryStorage() });
 router.post("/", upload.single("image"), uploadController);
 
 export default router;
