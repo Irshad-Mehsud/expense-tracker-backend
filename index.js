@@ -49,7 +49,7 @@ app.get("/", (req, res) => {
 });
 
 // ✅ Export for Vercel serverless function
-export const handler = serverless(app);
+export default serverless(app);
 
 // ✅ Local server (only runs locally, not on Vercel)
 if (process.env.NODE_ENV !== "production") {
@@ -58,4 +58,4 @@ if (process.env.NODE_ENV !== "production") {
     console.log(`🚀 Server is running on port ${PORT}`);
   });
 }
-module.exports = app; // For testing purposes
+// module.exports = app; // For testing purposes
