@@ -13,17 +13,6 @@ try {
 }
 };
 
-// const getUserByIdController =async (req, res) => {
-    
-// try {
-//     const {userId}= req.params;
-//     const singleUser= await getDataById(userId);
-//     res.status(200).json({ status:200, data: singleUser,message:"User fetched successfully" });
-// } catch (error) {
-//     res.status(500).json({ status:500, error: error.message });
-// }
-// };
-// Controller
 const getCurrentUser = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");

@@ -2,9 +2,6 @@ import Expense from "../model/index.js";
 import expenseValidation from "../validation/index.js";
 
 export const createExpense = async (expenseData) => {
-  // const { error } = expenseValidation(expenseData);
-  // if (error) throw new Error(error.details.map(d => d.message).join(", "));
-
   const expense = new Expense(expenseData);
   await expense.save();
   return expense.populate("user", "-password");

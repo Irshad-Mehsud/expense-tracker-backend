@@ -1,38 +1,6 @@
 import * as db from "../db/index.js";
 import expenseValidation from "../validation/index.js";
 import mongoose from "mongoose";
-// export const create = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-
-//     // ✅ Validate only req.body (without user)
-//     const { error } = expenseValidation(req.body);
-//     if (error) {
-//       return res.status(400).json({
-//         status: 400,
-//         message: error.details[0].message,
-//       });
-//     }
-
-//     // ✅ Add user after validation
-//     const expenseData = { ...req.body, user: id };
-
-//     const expense = await db.createExpense(expenseData);
-
-//     res.status(201).json({
-//       status: 201,
-//       message: "Expense created successfully",
-//       expense,
-//     });
-//   } catch (err) {
-//     console.error(err);
-//     res.status(400).json({
-//       status: 400,
-//       message: err.message,
-//     });
-//   }
-// };
-
 
 export const create = async (req, res) => {
   try {
