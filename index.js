@@ -12,7 +12,7 @@ const app = express();
 app.use(express.json());
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://expense-tracker-frontend-ph3pbbkyr-irshad-mehsuds-projects.vercel.app"], // Add your production frontend URL here
+    origin: ["http://localhost:5173", "https://expense-tracker-frontend-jade-alpha.vercel.app/"], // Add your production frontend URL here
     credentials: true,
   })
 );
