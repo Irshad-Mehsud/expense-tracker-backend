@@ -2,45 +2,46 @@ import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
-import chalk from "chalk";
-import serverless from "serverless-http"; // Keep this import
 import routes from "./src/routes/index.js";
 
 dotenv.config();
 
 const app = express();
 
+// Middleware
 app.use(express.json());
-
 app.use(
   cors({
-    origin: "http://localhost:5173", // your frontend origin
+    origin: ["http://localhost:5173", "https://expense-tracker-frontend-ph3pbbkyr-irshad-mehsuds-projects.vercel.app"], // Add your production frontend URL here
     credentials: true,
   })
 );
 
 const ENV = process.env;
 
-// MongoDB connection options
-const mongooseOptions = {
-  serverSelectionTimeoutMS: 30000, // Increase timeout to 30 seconds
-  socketTimeoutMS: 45000,
-  family: 4, // Force IPv4
-};
-
-// Use Atlas directly
+// MongoDB connection with optimized settings for Serverless
 const MONGO_URI = `mongodb+srv://${ENV.DB_USER}:${ENV.DB_PASSWORD}@irshadcluster.w5dqwxs.mongodb.net/${ENV.DB_NAME}?retryWrites=true&w=majority&appName=IrshadCluster`;
 
-mongoose
-  .connect(MONGO_URI, mongooseOptions)
-  .then(() => console.log(chalk.white.bgGreen(`------Connected to MongoDB Atlas----`)))
-  .catch((err) => {
+// Database connection logic (Cached for Vercel performance)
+let isConnected = false;
+const connectDB = async () => {
+  if (isConnected) return;
+  try {
+    const db = await mongoose.connect(MONGO_URI, {
+      serverSelectionTimeoutMS: 5000, // Reduced for faster serverless cold starts
+    });
+    isConnected = db.connections[0].readyState;
+    console.log("Connected to MongoDB Atlas");
+  } catch (err) {
     console.error("MongoDB connection error:", err);
-    console.log(chalk.red("\n⚠️  Troubleshooting tips:"));
-    console.log("1. Check if your IP is whitelisted in MongoDB Atlas (Network Access)");
-    console.log("2. Verify your DB credentials in .env file");
-    console.log("3. Check your internet connection");
-  });
+  }
+};
+
+// Middleware to ensure DB is connected before processing requests
+app.use(async (req, res, next) => {
+  await connectDB();
+  next();
+});
 
 app.use("/api", routes);
 
@@ -48,19 +49,10 @@ app.get("/", (req, res) => {
   res.send("Backend is running successfully!");
 });
 
-// IMPORTANT CHANGE FOR VERCEL
+// ✅ FINAL EXPORT: Vercel needs the 'app' instance directly
+export default app;
 
-// ✅ Local server (only runs locally, not on Vercel)
-if (process.env.NODE_ENV !== "production") {
-  const PORT = process.env.PORT || 5000;
-  app.listen(PORT, () => {
-    console.log(`🚀 Server is running on port ${PORT}`);
-  });
-}
-// ✅ Export for Vercel serverless function
-export default serverless(app);
-
-// ✅ Local server (only runs locally, not on Vercel)
+// ✅ Local development only
 if (process.env.NODE_ENV !== "production") {
   const PORT = process.env.PORT || 5000;
   app.listen(PORT, () => {
